@@ -3,6 +3,7 @@ from scipy import stats
 import numpy as np
 import pandas as pd
 import re
+import warnings
 
 from .utilities import map_database_gene_ids, correct_p
 
@@ -62,7 +63,10 @@ def compare_clusters(df,grouping,enrichment_threshold=1,correction='fdr_bh',
 
     pathway_cluster_matrix = sharepathway.enrichment.enrichment(gene_cluster_matrix, gene_pathway_matrix)
 
-    enrichment = (pathway_cluster_matrix/gene_cluster_matrix.sum(axis=0))/(gene_pathway_matrix.sum(axis=0)/gene_pathway_matrix.shape[0]).T[:,None]
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore",category=RuntimeWarning)
+        enrichment = ((pathway_cluster_matrix/gene_cluster_matrix.sum(axis=0))/
+            (gene_pathway_matrix.sum(axis=0)/gene_pathway_matrix.shape[0]).T[:,None])
 
     results = []
     for p,c in zip(*(enrichment>enrichment_threshold).nonzero()):
