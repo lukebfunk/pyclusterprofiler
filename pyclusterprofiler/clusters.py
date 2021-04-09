@@ -11,7 +11,7 @@ __all__ = [
     ]
 
 def compare_clusters(df,grouping,enrichment_threshold=1,correction='fdr_bh',
-    organism='hsa',database='KEGG',pathway_filters=None):
+    organism='hsa',database='KEGG',pathway_filters=None,verbose=True):
 
     if database=='KEGG':
         from .KEGG_utilities import (
@@ -51,7 +51,7 @@ def compare_clusters(df,grouping,enrichment_threshold=1,correction='fdr_bh',
     clusters = dict()
 
     for i,(cluster,df_cluster_genes) in enumerate(df.groupby(grouping,sort=True)):
-        genelists[cluster] = map_database_gene_ids(df_cluster_genes['gene_id'].tolist(),gene_id_mapping)
+        genelists[cluster] = map_database_gene_ids(df_cluster_genes['gene_id'].tolist(),gene_id_mapping,verbose=verbose)
         clusters[i] = cluster
         GENES |= set(genelists[cluster])
     GENES = list(GENES)

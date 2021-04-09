@@ -6,14 +6,15 @@ __all__ = [
     'correct_p'
     ]
 
-def map_database_gene_ids(ncbi_gene_ids,gene_id_mapping):
+def map_database_gene_ids(ncbi_gene_ids,gene_id_mapping,verbose=True):
     gene_list = []
 
     for gene_id in ncbi_gene_ids:
         if gene_id in gene_id_mapping.keys():
             gene_list.append(gene_id_mapping[gene_id])
         else:
-            print(f'{gene_id} not found in database')
+            if verbose:
+                print(f'{gene_id} not found in database')
 
     return gene_list
 
