@@ -2,6 +2,7 @@ import sharepathway
 from scipy import stats
 import numpy as np
 import pandas as pd
+import re
 
 from .utilities import map_database_gene_ids, correct_p
 
@@ -10,7 +11,7 @@ __all__ = [
     ]
 
 def compare_clusters(df,grouping,enrichment_threshold=1,correction='fdr_bh',
-    organism='hsa',database='KEGG'):
+    organism='hsa',database='KEGG',pathway_filters=None):
 
     if database=='KEGG':
         from .KEGG_utilities import (
@@ -19,11 +20,31 @@ def compare_clusters(df,grouping,enrichment_threshold=1,correction='fdr_bh',
             get_gene_pathway_mapping
             )
     else:
+        # todo: implement GO interface; probably can borrow functions from goatools (https://github.com/tanghaibao/goatools)
         raise NotImplementedError('Only `database`="KEGG" is currently implemented.')
 
+    if pathway_filters is None:
+        pathway_filter = lambda x: x
+    elif callable(pathway_filters):
+        pathway_filter = pathway_filters
+    else:
+        patterns = []
+        if (database=='KEGG')&(organism=='hsa')&('remove_diseases' in pathway_filters):
+            patterns.extend([r'.*hsa05.*',r'.*hsa0493[01234].*',r'.*hsa049[45]0.*',r'.*hsa015.*'])
+        if (database=='KEGG')&(organism=='hsa')&('remove_organismal' in pathway_filters):
+            patterns.extend([r'.*hsa046[12457].*',r'.*hsa04062.*',r'.*hsa049[1267].*',r'.*hsa04935.*',
+                r'.*hsa03320.*',r'.*hsa042[67].*',r'.*hsa047.*',r'.*hsa043[268].*',r'.*hsa0421[123].*'])
+
+        remaining = [f for f in pathway_filters if f not in ['remove_diseases','remove_organismal']]
+
+        if len(remaining)>0:
+            patterns.extend([p for p in remaining if isinstance(p,str)])
+
+        pathway_filter = lambda x: not any([re.match(p,x) for p in patterns])
+
     gene_id_mapping = get_gene_id_mapping(organism)
-    pathway_id_mapping = get_pathway_mapping(organism)
-    gene_pathway_mapping = get_gene_pathway_mapping(organism)
+    pathway_id_mapping = get_pathway_mapping(organism,filter=pathway_filter)
+    gene_pathway_mapping = get_gene_pathway_mapping(organism, pathway_filter=pathway_filter)
 
     GENES = set()
     genelists = dict()
