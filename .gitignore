@@ -1,0 +1,13 @@
+__pycache__/
+
+.DS_store
+
+pyclusterprofiler/_version.py
+
+build/
+dist/
+eggs/
+.eggs/
+sdist/
+*.egg-info/
+*.egg

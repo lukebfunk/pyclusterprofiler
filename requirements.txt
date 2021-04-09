@@ -1,0 +1,6 @@
+sharepathway==0.5.0
+statsmodels
+scipy
+seaborn
+pandas
+numpy
