@@ -105,7 +105,7 @@ def compare_clusters(df,grouping,enrichment_threshold=1,correction='fdr_bh',
             'cluster_pathway_genes':pathway_cluster_matrix[p,c],
             'cluster_pathway_ratio':pathway_cluster_matrix[p,c]/gene_cluster_matrix[:,c].sum(),
             'genes':genes,
-            'enrichment':enrichment[p,c],
+            'observed/expected':enrichment[p,c],
             'pvalue':pvalue,
             'odds_ratio':odds_ratio,
             'map_url':map_url,
@@ -119,6 +119,7 @@ def compare_clusters(df,grouping,enrichment_threshold=1,correction='fdr_bh',
                                      )
 
     df_results['-log10_corrected_pvalue'] = -np.log10(df_results['corrected_pvalue'])
+    df_results['log2_observed/expected'] = np.log2(df_results['observed/expected'])
 
     return df_results
 
