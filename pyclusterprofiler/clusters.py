@@ -60,6 +60,8 @@ def compare_clusters(df,grouping,enrichment_threshold=1,correction='fdr_bh',
         GENES |= set(genelists[cluster])
     GENES = list(GENES)
 
+    print(f'Analyzing {len(GENES)} genes, {df.groupby(grouping).ngroups} groups, {len(pathway_id_mapping)} pathways')
+
     gene_cluster_matrix = genes2mat(genelists,GENES)
 
     pathways, pathway_counts, gene_pathway_matrix = sharepathway.linkpath2mat.linkpath2mat(GENES, gene_pathway_mapping)
