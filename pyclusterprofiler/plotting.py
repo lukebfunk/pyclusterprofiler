@@ -62,17 +62,22 @@ def dotplot(df,x='cluster',y='pathway',size='log2_observed/expected',hue='-log10
 	y_units = ax.yaxis.get_units()._mapping
 	x_units = ax.xaxis.get_units()._mapping
 
+	if max(y_units.values())<10:
+		y_offset = max(y_units.values())*0.05
+	else:
+		y_offset = 0.5	
+
 	for _,s in df.iterrows():
-		t = ax.text(s[x],y_units[s[y]]-0.75,int(s['cluster_pathway_genes']),ha='center',va='center')
+		t = ax.text(s[x],y_units[s[y]]-y_offset,int(s['cluster_pathway_genes']),ha='center',va='center')
 
 	for _,s in df.drop_duplicates(x).iterrows():
-		ax.text(s[x],ax.get_ylim()[1]-0.5,int(s['cluster_pathway_genes']/s['cluster_pathway_ratio']),
+		ax.text(s[x],ax.get_ylim()[1]-(y_offset*2),int(s['cluster_pathway_genes']/s['cluster_pathway_ratio']),
 			ha='center',va='bottom',rotation=-90
 			)
 
 	ax.grid()
 	ax.tick_params(axis='x',rotation=-90)
 	ax.legend(handles=legend_elements,loc=(1.05,0.25))
-	ax.text(np.mean(ax.get_xlim()),ax.get_ylim()[1]-2.5,'# of genes in cluster',ha='center')
+	ax.text(np.mean(ax.get_xlim()),ax.get_ylim()[1]-(y_offset*3),'# of genes in cluster',ha='center')
 
-	return ax
+	return ax,y_units,x_units
