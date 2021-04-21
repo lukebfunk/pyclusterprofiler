@@ -2,8 +2,8 @@ import sharepathway
 from scipy import stats
 import numpy as np
 import pandas as pd
-import re
 import warnings
+from functools import partial
 
 from .utilities import map_database_gene_ids, correct_p
 
@@ -12,7 +12,7 @@ __all__ = [
     ]
 
 def compare_clusters(df,grouping,enrichment_threshold=1,correction='fdr_bh',
-    organism='hsa',database='KEGG',pathway_filters=None,verbose=True):
+    organism='hsa',database='KEGG',exclude=None,force=False,verbose=True):
 
     if database=='KEGG':
         from .KEGG_utilities import (
@@ -20,36 +20,39 @@ def compare_clusters(df,grouping,enrichment_threshold=1,correction='fdr_bh',
             get_pathway_mapping, 
             get_gene_pathway_mapping
             )
+
+        if organism==9606:
+            organism='hsa'
+
+    elif 'GO' in database:
+        from .GO_utilities import (
+            get_gene_id_mapping,
+            get_pathway_mapping,
+            get_gene_pathway_mapping
+            )
+
+        if organism=='hsa':
+            organism=9606
+
+        # uses GO-slim if 'slim' in `ontology`
+        get_pathway_mapping = partial(get_pathway_mapping,ontology=database)
+
     else:
-        # todo: implement GO interface; probably can borrow functions from goatools (https://github.com/tanghaibao/goatools)
-        raise NotImplementedError('Only `database`="KEGG" is currently implemented.')
+        raise NotImplementedError('Only `database`="KEGG" or "GO" is currently implemented.')
 
-    if pathway_filters is None:
-        pathway_filter = lambda x: x
-    elif callable(pathway_filters):
-        pathway_filter = pathway_filters
-    else:
-        patterns = []
-        if (database=='KEGG')&(organism=='hsa')&('remove_diseases' in pathway_filters):
-            patterns.extend([r'.*hsa05.*',r'.*hsa0493[01234].*',r'.*hsa049[45]0.*',r'.*hsa015.*'])
-        if (database=='KEGG')&(organism=='hsa')&('remove_organismal' in pathway_filters):
-            patterns.extend([r'.*hsa046[12457].*',r'.*hsa04062.*',r'.*hsa049[1267].*',r'.*hsa04935.*',
-                r'.*hsa03320.*',r'.*hsa042[67].*',r'.*hsa047.*',r'.*hsa043[268].*',r'.*hsa0421[123].*'])
+    gene_id_mapping = get_gene_id_mapping(organism, force=force)
+    pathway_id_mapping = get_pathway_mapping(organism, exclude=exclude, force=force)
 
-        remaining = [f for f in pathway_filters if f not in ['remove_diseases','remove_organismal']]
-
-        if len(remaining)>0:
-            patterns.extend([p for p in remaining if isinstance(p,str)])
-
-        pathway_filter = lambda x: not any([re.match(p,x) for p in patterns])
-
-    gene_id_mapping = get_gene_id_mapping(organism)
-    pathway_id_mapping = get_pathway_mapping(organism,filter=pathway_filter)
-    gene_pathway_mapping = get_gene_pathway_mapping(organism, pathway_filter=pathway_filter)
+    if 'GO' in database:
+        # when using GO, gene_pathway_mapping uses same download as gene_id_mapping
+        force=False
+    gene_pathway_mapping = get_gene_pathway_mapping(organism, annotations=list(pathway_id_mapping.keys()), force=force)
 
     GENES = set()
     genelists = dict()
     clusters = dict()
+
+    df = df.astype({'gene_id':'str'})
 
     for i,(cluster,df_cluster_genes) in enumerate(df.groupby(grouping,sort=True)):
         genelists[cluster] = map_database_gene_ids(df_cluster_genes['gene_id'].tolist(),gene_id_mapping,verbose=verbose)
@@ -88,15 +91,15 @@ def compare_clusters(df,grouping,enrichment_threshold=1,correction='fdr_bh',
 
         # prepare the table
         pathway_id = pathways[p]
-        pathway_name = pathway_id_mapping[pathway_id].split(' - ')[0].strip()
+        pathway_name = pathway_id_mapping[pathway_id]
+
+        if database=="KEGG":
+            pathway_name = pathway_name.split(' - ')[0].strip()
 
         genes = [str(g) for g,include in zip(GENES,(gene_pathway_matrix[:,p].astype(bool)&gene_cluster_matrix[:,c].astype(bool))) 
                     if include]
 
-        genesid = '+'.join([g.split(':')[1] for g in genes])
-        map_url = "http://www.kegg.jp/pathway/"+pathway_id.split(':')[1]+'+'+genesid
-
-        results.append({
+        result = {
             'cluster':clusters[c],
             'pathway':pathway_name,
             'pathway_id':pathway_id,
@@ -107,9 +110,14 @@ def compare_clusters(df,grouping,enrichment_threshold=1,correction='fdr_bh',
             'genes':genes,
             'observed/expected':enrichment[p,c],
             'pvalue':pvalue,
-            'odds_ratio':odds_ratio,
-            'map_url':map_url,
-                       })
+            'odds_ratio':odds_ratio}
+
+        if database=="KEGG":
+            genesid = '+'.join([g.split(':')[1] for g in genes])
+            map_url = "http://www.kegg.jp/pathway/"+pathway_id.split(':')[1]+'+'+genesid
+            result['map_url'] = map_url
+
+        results.append(result)
 
     df_results = pd.DataFrame(results)
 
