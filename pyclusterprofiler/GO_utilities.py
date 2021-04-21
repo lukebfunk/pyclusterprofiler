@@ -57,7 +57,7 @@ def get_namespace_filter(exclude):
 				}
 
 	if exclude is None:
-		namespace_filter = lambda x: True
+		return lambda x: True
 
 	else:
 		if isinstance(exclude,str):
@@ -68,6 +68,4 @@ def get_namespace_filter(exclude):
 		except:
 			raise ValueError(f'`exclude`={exclude} not recognized. Acceptable values are {namespace_map.keys()}')
 
-		namespace_filter = lambda x: x not in namespace
-
-	return namespace_filter
+		return lambda x: x not in namespace

@@ -32,7 +32,7 @@ def get_pathway_filter(exclude=None,organism='hsa'):
 	exclude_groups = ['human_diseases','organismal_systems']
 
 	if exclude is None:
-		pathway_filter = lambda x: True
+		return lambda x: True
 	else:
 		if organism != 'hsa':
 			raise ValueError(f'Only exluding human (`organism`="hsa") KEGG pathways is implemented')
