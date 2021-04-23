@@ -45,7 +45,6 @@ Plot results as a dot plot:
 |----------|-------------|
 | `df` | dataframe with "gene_id" column containing NCBI gene id's and a column specifying group membership|
 | `grouping` | column or list of columns in `df` to use for group membership |
-| `enrichment_threshold` | threshold on ratio of observed/expected gene counts for test to include in results (default 1) |
 | `correction` | method for correcting p-values for multiple hypothesis testing, used as argument to `statsmodels.stats.multitest.multipletests` (default "fdr_bh") |
 | `organism` | organism databases to download. GO uses NCBI taxid; for KEGG see their [organism list]	(default is human databases for each) |
 | `database` | "KEGG", "GO", or "GO-slim" (default "KEGG") |

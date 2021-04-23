@@ -11,7 +11,7 @@ __all__ = [
     'compare_clusters'
     ]
 
-def compare_clusters(df,grouping,enrichment_threshold=1,correction='fdr_bh',
+def compare_clusters(df,grouping,correction='fdr_bh',
     organism='hsa',database='KEGG',exclude=None,force=False,verbose=True):
 
     if database=='KEGG':
@@ -74,7 +74,8 @@ def compare_clusters(df,grouping,enrichment_threshold=1,correction='fdr_bh',
             (gene_pathway_matrix.sum(axis=0)/gene_pathway_matrix.shape[0]).T[:,None])
 
     results = []
-    for p,c in zip(*(enrichment>enrichment_threshold).nonzero()):
+    # for p,c in zip(*(enrichment>enrichment_threshold).nonzero()):
+    for p,c in zip(*np.indices(enrichment.shape).reshape(2,-1)):
         c_mask = np.zeros(enrichment.shape[1],dtype=bool)
         p_mask = np.zeros(enrichment.shape[0],dtype=bool)
         c_mask[c] = True
@@ -120,6 +121,9 @@ def compare_clusters(df,grouping,enrichment_threshold=1,correction='fdr_bh',
             result['map_url'] = map_url
 
         results.append(result)
+
+    if len(results) == 0:
+        raise ValueError(f'No enriched pathways identified')
 
     df_results = pd.DataFrame(results)
 
