@@ -1,5 +1,7 @@
 import os
-import goatools
+import goatools.base
+from goatools.anno.genetogo_reader import Gene2GoReader
+from goatools.obo_parser import GODag
 
 __all__ = [
 	'get_gene_id_mapping',
@@ -11,7 +13,7 @@ def get_gene_id_mapping(organism=9606, force=False):
 	if force & (os.path.isfile('gene2go')):
 		os.remove('gene2go')
 
-	gene2go = goatools.anno.genetogo_reader.Gene2GoReader(goatools.base.download_ncbi_associations(), taxids=[organism]).get_id2gos_nss()
+	gene2go = Gene2GoReader(goatools.base.download_ncbi_associations(), taxids=[organism]).get_id2gos_nss()
 
 	return {str(gene):gene for gene in gene2go.keys()}
 
@@ -26,7 +28,7 @@ def get_pathway_mapping(organism=9606, ontology='basic', exclude=None, force=Fal
 
 	obo_fname = goatools.base.download_go_basic_obo(obo)
 
-	obodag = goatools.obo_parser.GODag(obo_fname)
+	obodag = GODag(obo_fname)
 
 	return {term_id:term.name for term_id,term in obodag.items() if namespace_filter(term.namespace)}
 
@@ -40,7 +42,7 @@ def get_gene_pathway_mapping(organism=9606, annotations=None, force=False):
 	else:
 		annotation_filter = lambda x: x in annotations
 
-	gene2go = goatools.anno.genetogo_reader.Gene2GoReader(goatools.base.download_ncbi_associations(), taxids=[organism]).get_id2gos_nss()
+	gene2go = Gene2GoReader(goatools.base.download_ncbi_associations(), taxids=[organism]).get_id2gos_nss()
 
 	gene_pathway_mapping = []
 
