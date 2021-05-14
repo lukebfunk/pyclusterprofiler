@@ -103,7 +103,7 @@ def compare_clusters(df,grouping,correction='fdr_bh',
                     if include]
 
         result = {
-            'cluster':clusters[c],
+            grouping:clusters[c],
             'pathway':pathway_name,
             'pathway_id':pathway_id,
             'background_pathway_genes':pathway_counts[p],
