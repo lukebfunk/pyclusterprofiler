@@ -8,7 +8,8 @@ __all__ = [
 	]
 
 def dotplot(df,x='cluster',y='pathway',size='log2_observed/expected',hue='-log10_corrected_pvalue',
-			figsize=plt.rcParams['figure.figsize'],size_norm=(1,10),hue_norm=(1,10),**kwargs):
+			figsize=plt.rcParams['figure.figsize'],size_norm=(1,10),hue_norm=(1,10),x_count_labels=True,
+			dot_count_labels=True,**kwargs):
 
 	df = df.astype({x:str})
 
@@ -67,17 +68,19 @@ def dotplot(df,x='cluster',y='pathway',size='log2_observed/expected',hue='-log10
 	else:
 		y_offset = 0.5	
 
-	for _,s in df.iterrows():
-		t = ax.text(s[x],y_units[s[y]]-y_offset,int(s['cluster_pathway_genes']),ha='center',va='center')
+	if dot_count_labels:
+		for _,s in df.iterrows():
+			t = ax.text(s[x],y_units[s[y]]-y_offset,int(s['cluster_pathway_genes']),ha='center',va='center')
 
-	for _,s in df.drop_duplicates(x).iterrows():
-		ax.text(s[x],ax.get_ylim()[1]-(y_offset),int(s['cluster_pathway_genes']/s['cluster_pathway_ratio']),
-			ha='center',va='center',rotation=-90
-			)
+	if x_count_labels:
+		for _,s in df.drop_duplicates(x).iterrows():
+			ax.text(s[x],ax.get_ylim()[1]-(y_offset),int(s['cluster_pathway_genes']/s['cluster_pathway_ratio']),
+				ha='center',va='center',rotation=-90
+				)
+		ax.text(np.mean(ax.get_xlim()),ax.get_ylim()[1]-(y_offset*2.5),f'# of genes in {x}',ha='center')
 
 	ax.grid()
 	ax.tick_params(axis='x',rotation=-90)
 	ax.legend(handles=legend_elements,loc=(1.05,0.25))
-	ax.text(np.mean(ax.get_xlim()),ax.get_ylim()[1]-(y_offset*2.5),'# of genes in cluster',ha='center')
 
 	return ax
