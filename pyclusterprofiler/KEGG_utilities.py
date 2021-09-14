@@ -48,10 +48,10 @@ def get_pathway_filter(exclude=None,organism='hsa'):
 		patterns = []
 		if 'human_diseases' in exclude:
 			patterns.extend([r'.*hsa05.*',r'.*hsa0493[01234].*',r'.*hsa049[45]0.*',r'.*hsa015.*'])
-		if 'remove_organismal' in exclude:
+		if 'organismal_systems' in exclude:
 			patterns.extend([r'.*hsa046[12457].*',r'.*hsa04062.*',r'.*hsa049[1267].*',r'.*hsa04935.*',
-				r'.*hsa03320.*',r'.*hsa042[67].*',r'.*hsa047.*',r'.*hsa043[268].*',r'.*hsa0421[123].*'])
-
+				r'.*hsa03320.*',r'.*hsa042[67].*',r'.*hsa047.*',r'.*hsa043[268].*',r'.*hsa0421[123].*',
+				r'.*hsa0466[0246].*'])
 		return lambda x: not any([re.match(p,x) for p in patterns])
 
 def geneIDconv(organism='hsa',force=False):
@@ -61,3 +61,8 @@ def geneIDconv(organism='hsa',force=False):
     for line in keggd:
         Kgid[line[0].split(':')[1]] = line[1]
     return Kgid
+
+def KEGGIDconv(organism='hsa',force=False):
+    # KEGG ID conv from NCBI-GeneID to KEGG ID , though most of them are the same
+    Kgid = geneIDconv(organism=organism,force=force)
+    return {kegg:ncbi for ncbi,kegg in Kgid.items()}
